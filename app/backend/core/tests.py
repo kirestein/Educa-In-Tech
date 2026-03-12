@@ -1,5 +1,6 @@
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
+from unittest.mock import patch
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from decimal import Decimal
@@ -704,3 +705,239 @@ class RBACCoreAccessTest(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class GoogleSheetsIntegrationTest(APITestCase):
+    """Tests for exporting turma dashboard to Google Sheets."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.professor = User.objects.create_user(
+            username='prof_sheets',
+            password='ProfessorPassword123',
+        )
+        group, _ = Group.objects.get_or_create(name='professor')
+        self.professor.groups.add(group)
+
+        self.regular = User.objects.create_user(
+            username='regular_sheets',
+            password='RegularPassword123',
+        )
+
+        self.disc = Disciplina.objects.create(nome='Matemática Sheets', codigo='MAT-SHEETS-001')
+        self.unit = Unidade.objects.create(nome='Escola Sheets', cidade='SP', estado='SP')
+        self.turma = Turma.objects.create(
+            nome='7S',
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        self.aluno = Aluno.objects.create(nome='Aluno Sheets', matricula='SHEETS-0001', turma=self.turma)
+        self.aval = Avaliacao.objects.create(
+            titulo='Prova Sheets',
+            tipo='mensal',
+            turma=self.turma,
+            data_aplicacao='2026-03-10',
+        )
+        Nota.objects.create(aluno=self.aluno, avaliacao=self.aval, valor=Decimal('8.00'))
+
+    def _auth(self, username: str, password: str):
+        response = self.client.post(
+            '/api/users/token/',
+            {'username': username, 'password': password},
+            format='json',
+        )
+        token = response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    @patch('core.views.export_dashboard_to_google_sheets')
+    def test_export_dashboard_turma_google_sheets_success(self, export_mock):
+        self._auth('prof_sheets', 'ProfessorPassword123')
+        export_mock.return_value = {
+            'spreadsheet_id': 'sheet-id-123',
+            'worksheet': 'dashboard_turmas',
+            'linhas_enviadas': 1,
+        }
+
+        response = self.client.post(
+            f'/api/integrations/google-sheets/dashboard/turma/{self.turma.id}/export/',
+            {'dias': 7},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['resultado']['spreadsheet_id'], 'sheet-id-123')
+        self.assertEqual(response.data['resultado']['linhas_enviadas'], 1)
+        export_mock.assert_called_once()
+
+    def test_export_dashboard_turma_google_sheets_denies_regular_user(self):
+        self._auth('regular_sheets', 'RegularPassword123')
+        response = self.client.post(
+            f'/api/integrations/google-sheets/dashboard/turma/{self.turma.id}/export/',
+            {},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error']['code'], 'permission_denied')
+
+    def test_export_dashboard_turma_google_sheets_dias_invalido(self):
+        self._auth('prof_sheets', 'ProfessorPassword123')
+        response = self.client.post(
+            f'/api/integrations/google-sheets/dashboard/turma/{self.turma.id}/export/',
+            {'dias': 'abc'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['dias'], ['Informe um número inteiro positivo.'])
+
+    @patch('core.views.export_dashboard_to_google_sheets')
+    def test_export_dashboard_turma_google_sheets_not_configured(self, export_mock):
+        from core.integrations.google_sheets import GoogleSheetsConfigError
+
+        self._auth('prof_sheets', 'ProfessorPassword123')
+        export_mock.side_effect = GoogleSheetsConfigError('GOOGLE_SHEETS_CREDENTIALS_FILE não configurado.')
+
+        response = self.client.post(
+            f'/api/integrations/google-sheets/dashboard/turma/{self.turma.id}/export/',
+            {},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.data['error']['code'], 'integration_not_configured')
+
+
+class LocalLLMRagIntegrationTest(APITestCase):
+    """Tests for turma insights with self-hosted LLM + RAG."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.professor = User.objects.create_user(
+            username='prof_llm',
+            password='ProfessorPassword123',
+        )
+        group, _ = Group.objects.get_or_create(name='professor')
+        self.professor.groups.add(group)
+
+        self.regular = User.objects.create_user(
+            username='regular_llm',
+            password='RegularPassword123',
+        )
+
+        self.disc = Disciplina.objects.create(nome='Ciências LLM', codigo='CIE-LLM-001')
+        self.unit = Unidade.objects.create(nome='Escola LLM', cidade='SP', estado='SP')
+        self.turma = Turma.objects.create(
+            nome='8L',
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        self.aluno = Aluno.objects.create(nome='Aluno LLM', matricula='LLM-0001', turma=self.turma)
+        self.aval = Avaliacao.objects.create(
+            titulo='Prova LLM',
+            tipo='mensal',
+            turma=self.turma,
+            data_aplicacao='2026-03-11',
+        )
+        Nota.objects.create(aluno=self.aluno, avaliacao=self.aval, valor=Decimal('7.50'))
+
+    def _auth(self, username: str, password: str):
+        response = self.client.post(
+            '/api/users/token/',
+            {'username': username, 'password': password},
+            format='json',
+        )
+        token = response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    @patch('core.views.gerar_insights_turma_rag')
+    def test_gerar_insights_turma_llm_rag_success(self, rag_mock):
+        self._auth('prof_llm', 'ProfessorPassword123')
+        rag_mock.return_value = {
+            'provider': 'ollama',
+            'model': 'qwen2.5:7b-instruct',
+            'question': 'Quais ações imediatas devo priorizar?',
+            'answer': 'Diagnóstico e recomendações geradas.',
+            'context_chunks_used': 4,
+            'sources': [{'title': 'Resumo da turma', 'content': '...'}],
+        }
+
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {
+                'pergunta': 'Quais ações imediatas devo priorizar?',
+                'dias': 14,
+                'top_k': 5,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['resultado']['provider'], 'ollama')
+        self.assertEqual(response.data['resultado']['context_chunks_used'], 4)
+        rag_mock.assert_called_once()
+
+    def test_gerar_insights_turma_llm_rag_denies_regular_user(self):
+        self._auth('regular_llm', 'RegularPassword123')
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {'pergunta': 'Teste'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error']['code'], 'permission_denied')
+
+    def test_gerar_insights_turma_llm_rag_validates_required_pergunta(self):
+        self._auth('prof_llm', 'ProfessorPassword123')
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {'pergunta': '   '},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['pergunta'], ['Este campo é obrigatório.'])
+
+    def test_gerar_insights_turma_llm_rag_validates_top_k(self):
+        self._auth('prof_llm', 'ProfessorPassword123')
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {'pergunta': 'Teste', 'top_k': 99},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['top_k'], ['Informe um número inteiro entre 1 e 20.'])
+
+    @patch('core.views.gerar_insights_turma_rag')
+    def test_gerar_insights_turma_llm_rag_not_configured(self, rag_mock):
+        from core.integrations.local_llm_rag import LocalLLMConfigError
+
+        self._auth('prof_llm', 'ProfessorPassword123')
+        rag_mock.side_effect = LocalLLMConfigError('LOCAL_LLM_ENABLED está desativado.')
+
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {'pergunta': 'Teste'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.data['error']['code'], 'integration_not_configured')
+
+    @patch('core.views.gerar_insights_turma_rag')
+    def test_gerar_insights_turma_llm_rag_provider_failure(self, rag_mock):
+        from core.integrations.local_llm_rag import LocalLLMExecutionError
+
+        self._auth('prof_llm', 'ProfessorPassword123')
+        rag_mock.side_effect = LocalLLMExecutionError('Falha ao conectar no provedor de LLM local.')
+
+        response = self.client.post(
+            f'/api/integrations/llm-rag/dashboard/turma/{self.turma.id}/insights/',
+            {'pergunta': 'Teste'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+        self.assertEqual(response.data['error']['code'], 'integration_error')
