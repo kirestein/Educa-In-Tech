@@ -103,7 +103,7 @@ Cobertura atual inclui:
 
 Status validado:
 
-- **53 testes passando**.
+- **63 testes passando**.
 
 ### 2.9 Pipeline CI/CD
 
@@ -177,6 +177,25 @@ Concluído:
 - validação do parâmetro de recorte adicionada ao endpoint;
 - testes ampliados para recorte temporal, série recente e comparativo entre turmas.
 
+### 2.16 Integração com Google Sheets
+
+Concluído:
+
+- integração de exportação do dashboard da turma para planilhas Google;
+- endpoint dedicado para envio de dados analíticos por turma;
+- tratamento de erros de configuração e comunicação com serviço externo;
+- testes cobrindo sucesso, validação de parâmetros, permissão e configuração ausente.
+
+### 2.17 IA self-hosted com RAG
+
+Concluído:
+
+- integração com LLM local via endpoint compatível com Ollama;
+- pipeline RAG para montar contexto da turma com dados acadêmicos reais;
+- endpoint para geração de insights pedagógicos por turma com pergunta customizada;
+- parâmetros de recorte (`dias`) e profundidade de recuperação (`top_k`) no fluxo de insights;
+- testes cobrindo sucesso, validações, permissão e erros de integração.
+
 ---
 
 ## 3. O que está validado neste momento
@@ -185,7 +204,7 @@ Validado localmente:
 
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 53/53 passando.
+- suíte de testes com 63/63 passando.
 
 Validado estruturalmente:
 
@@ -215,8 +234,8 @@ Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é impor
 
 Backlog planejado:
 
-- integração com Google Sheets;
-- integração com microserviço de IA;
+- observabilidade e monitoramento do serviço de IA local;
+- evolução do RAG para busca semântica com embeddings e vetor store;
 - sincronizações futuras com serviços externos.
 
 ### Prioridade 2 — Endurecimento para produção
@@ -233,8 +252,8 @@ Evoluções recomendadas:
 
 Itens ainda não iniciados ou não concluídos:
 
-- integração com Google Sheets;
-- integração backend ↔ microserviço de IA;
+- observabilidade da camada de IA self-hosted;
+- melhoria do RAG com recuperação semântica;
 - endurecimento para produção (segurança, observabilidade e configurações de deploy).
 
 ---
@@ -252,13 +271,13 @@ Arquivos:
 
 Status validado:
 
-- **53 testes passando**.
+- **63 testes passando**.
 
 ### O próximo passo é iniciar integrações externas?
 
 Sim.
 
-Com RBAC, contrato de erros, OpenAPI e dashboards fase 2 já entregues, a próxima frente de maior valor é conectar o backend a serviços externos prioritários.
+Com RBAC, contrato de erros, OpenAPI, dashboards fase 2 e integrações iniciais já entregues, a próxima frente de maior valor é robustecer a operação do stack de IA local e evoluir a qualidade da recuperação no RAG.
 
 ---
 
@@ -276,4 +295,4 @@ Projeto já entregue até aqui:
 
 Próximo foco recomendado:
 
-- **iniciar integrações externas, começando por Google Sheets ou microserviço de IA**.
+- **fortalecer a camada self-hosted de IA (observabilidade + RAG semântico) e avançar no endurecimento para produção**.

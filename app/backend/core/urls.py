@@ -9,6 +9,8 @@ from .views import (
     TurmaViewSet,
     UnidadeViewSet,
     dashboard_turma,
+    exportar_dashboard_turma_google_sheets,
+    gerar_insights_turma_llm_rag,
     healthcheck,
 )
 
@@ -23,5 +25,15 @@ router.register('notas', NotaViewSet, basename='notas')
 urlpatterns = [
     path('health/', healthcheck, name='core-healthcheck'),
     path('dashboard/turma/<int:pk>/', dashboard_turma, name='dashboard-turma'),
+    path(
+        'integrations/google-sheets/dashboard/turma/<int:pk>/export/',
+        exportar_dashboard_turma_google_sheets,
+        name='dashboard-turma-export-google-sheets',
+    ),
+    path(
+        'integrations/llm-rag/dashboard/turma/<int:pk>/insights/',
+        gerar_insights_turma_llm_rag,
+        name='dashboard-turma-insights-llm-rag',
+    ),
     path('', include(router.urls)),
 ]
