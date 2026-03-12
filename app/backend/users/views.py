@@ -1,19 +1,18 @@
 from django.contrib.auth.models import Group, User
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def healthcheck(_request):
     return Response({'service': 'backend-users', 'status': 'ok'})
 
 
-healthcheck.permission_classes = [AllowAny]
-
-
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def me(request):
     user = request.user
     return Response(
@@ -28,10 +27,8 @@ def me(request):
     )
 
 
-me.permission_classes = [IsAuthenticated]
-
-
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def assign_role(request):
     username = request.data.get('username')
     role = request.data.get('role')
@@ -63,6 +60,3 @@ def assign_role(request):
             'groups': list(user.groups.values_list('name', flat=True)),
         }
     )
-
-
-assign_role.permission_classes = [IsAdminUser]
