@@ -120,3 +120,42 @@ Correção automática: desenvolver pipeline de IA para processamento de provas
 Deploy em nuvem: configurar pipelines de CI/CD e publicar em um provedor como Heroku, AWS ou DigitalOcean
 
 <img src="assets/img/arc.png" />
+
+## Setup rápido — IA self-hosted + RAG
+
+1. Copie o arquivo de exemplo de ambiente:
+
+```bash
+cp app/.env.example app/.env
+```
+
+2. Suba o provedor local (Ollama) e baixe um modelo:
+
+```bash
+ollama pull qwen2.5:7b-instruct
+ollama serve
+```
+
+3. Confirme as variáveis no `app/.env`:
+
+- `LOCAL_LLM_ENABLED=True`
+- `LOCAL_LLM_BASE_URL=http://localhost:11434`
+- `LOCAL_LLM_MODEL=qwen2.5:7b-instruct`
+
+4. Endpoint de insights com RAG:
+
+- `POST /api/integrations/llm-rag/dashboard/turma/{id}/insights/`
+
+Payload de exemplo:
+
+```json
+{
+  "pergunta": "Quais ações pedagógicas devo priorizar para esta turma?",
+  "dias": 30,
+  "top_k": 6
+}
+```
+
+5. Endpoint de exportação para Sheets:
+
+- `POST /api/integrations/google-sheets/dashboard/turma/{id}/export/`
