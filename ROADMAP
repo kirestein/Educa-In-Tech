@@ -1,10 +1,11 @@
 # ROADMAP — Educa in Tech
 
-Data de referência: 11 de março de 2026
+Data de referência: 12 de março de 2026
 
 ## 1. Visão geral
 
 Este documento consolida:
+
 - tudo o que já foi entregue no projeto até agora;
 - o que está validado tecnicamente;
 - o que ainda precisa ser feito;
@@ -15,13 +16,16 @@ Este documento consolida:
 ## 2. Entregas concluídas
 
 ### 2.1 Estrutura inicial do backend
+
 - Backend Django criado em `app/backend`.
 - Configuração principal do projeto em `config`.
 - Banco local com SQLite configurado para desenvolvimento.
 - Suporte preparado para PostgreSQL via variáveis de ambiente.
 
 ### 2.2 Modelagem do domínio acadêmico
+
 Implementado em `app/backend/core/models.py`:
+
 - `Disciplina`
 - `Unidade`
 - `Turma`
@@ -30,13 +34,16 @@ Implementado em `app/backend/core/models.py`:
 - `Nota`
 
 Regras já entregues:
+
 - relacionamentos entre entidades do domínio;
 - constraints de unicidade para evitar duplicidade;
 - chaves primárias automáticas com `BigAutoField`;
 - regras básicas de integridade para notas, turmas e vínculos acadêmicos.
 
 ### 2.3 API REST do domínio
+
 Implementado em `app/backend/core`:
+
 - serializers para todas as entidades;
 - viewsets com CRUD para os recursos principais;
 - rotas REST com router DRF;
@@ -45,7 +52,9 @@ Implementado em `app/backend/core`:
 - endpoint para transferência de aluno entre turmas.
 
 ### 2.4 Autenticação e módulo de usuários
+
 Implementado em `app/backend/users`:
+
 - autenticação JWT com access e refresh token;
 - endpoint `/api/users/token/`;
 - endpoint `/api/users/token/refresh/`;
@@ -53,31 +62,37 @@ Implementado em `app/backend/users`:
 - endpoint `/api/users/roles/assign/`;
 - healthcheck do módulo `users`.
 
-### 2.5 Permissões iniciais e base de RBAC
-Implementado:
-- leitura autenticada para recursos protegidos;
-- escrita restrita por papel em parte da API;
-- permissões customizadas no app `core`;
-- proteção administrativa para atribuição de roles.
+### 2.5 Permissões e RBAC refinado
 
-Observação:
-- o RBAC está funcional em nível inicial, mas ainda precisa ser refinado para cobrir melhor perfis, regras por ação e consistência entre endpoints.
+Implementado e validado:
+
+- leitura autenticada (`list`/`retrieve`) nos viewsets principais do `core`;
+- escrita restrita por papel (`admin`/`coordenador` e `professor` conforme endpoint);
+- permissões customizadas no app `core` aplicadas por ação (`get_permissions`);
+- proteção administrativa para atribuição de roles em `users`;
+- cenários positivos e negativos de autorização cobertos com testes.
 
 ### 2.6 Admin Django
+
 Implementado em `app/backend/core/admin.py`:
+
 - registro dos modelos do domínio;
 - filtros, listagens e campos de busca para operação administrativa.
 
 ### 2.7 Migrações
+
 - Migração inicial criada para o domínio acadêmico.
 - Estrutura validada com `manage.py migrate` e `manage.py check`.
 
 ### 2.8 Testes automatizados
+
 Testes gerados com sucesso em:
+
 - `app/backend/core/tests.py`
 - `app/backend/users/tests.py`
 
 Cobertura atual inclui:
+
 - testes de modelo;
 - testes de autenticação JWT;
 - testes de endpoints protegidos;
@@ -87,10 +102,13 @@ Cobertura atual inclui:
 - testes de atribuição de roles.
 
 Status validado:
-- **34 testes passando**.
+
+- **46 testes passando**.
 
 ### 2.9 Pipeline CI/CD
+
 Implementado:
+
 - workflow do GitHub Actions para validação do backend;
 - instalação de dependências;
 - `manage.py check`;
@@ -99,40 +117,63 @@ Implementado:
 - verificação informativa de estilo.
 
 Correções já aplicadas no CI:
+
 - ajuste da matrix Python para versões compatíveis com Django 6.x;
 - definição de `STATIC_ROOT` para permitir `collectstatic` no pipeline.
 
 ### 2.10 Git e organização do repositório
+
 Concluído:
+
 - branch `main` criada e definida como branch padrão do repositório;
 - branch de trabalho `feat/backend-bootstrap-academic-api` em uso;
+- branch de refinamento `feat/rbac-refinamento` criada e publicada no remoto;
 - convenção de commits aplicada;
 - pushes e correções do pipeline enviados ao remoto.
+
+### 2.11 Documentação de acesso por papel (RBAC)
+
+Concluído:
+
+- matriz de acesso por endpoint/método documentada em `RBAC_ACCESS_MATRIX.md`;
+- papéis `autenticado`, `professor`, `coordenador` e `admin` formalizados;
+- regras de leitura/escrita e ações customizadas registradas como referência de produto e backend.
+
+### 2.12 Dashboards analíticos (primeira evolução)
+
+Concluído:
+
+- dashboard de turma expandido com distribuição de notas por faixa;
+- inclusão de cobertura de lançamento de notas (total e percentual);
+- inclusão de média por tipo de avaliação no endpoint de dashboard;
+- testes do dashboard ampliados para cenários com e sem notas.
 
 ---
 
 ## 3. O que está validado neste momento
 
 Validado localmente:
+
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 34/34 passando.
+- suíte de testes com 46/46 passando.
 
 Validado estruturalmente:
+
 - autenticação JWT operacional;
+- warning de chave JWT curta resolvido com `SIMPLE_JWT['SIGNING_KEY']` e chave mínima adequada;
 - endpoints principais publicados;
-- regras iniciais de permissão funcionando;
+- regras de permissão por papel refinadas e testadas;
 - CI ajustado para compatibilidade com o stack atual.
 
 ---
 
 ## 4. Tarefas em andamento ou atenção imediata
 
-### 4.1 Revisar alteração local pendente
-Há uma alteração local pendente em `app/backend/users/tests.py` que precisa ser revisada antes do merge final, para garantir que não fique nada solto fora do fluxo principal.
+### 4.1 Confirmar PR totalmente verde
 
-### 4.2 Confirmar PR totalmente verde
-Mesmo com os fixes já enviados, é importante confirmar no GitHub que:
+Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é importante confirmar no GitHub que:
+
 - todos os checks ficaram verdes;
 - o PR está apto para merge;
 - não há novo erro de ambiente ou configuração.
@@ -141,46 +182,30 @@ Mesmo com os fixes já enviados, é importante confirmar no GitHub que:
 
 ## 5. Próximas tarefas recomendadas
 
-### Prioridade 1 — Refinar o RBAC
-Este é o próximo passo mais importante.
+### Prioridade 1 — Padronização de erros e contrato de API
 
-Objetivo:
-- formalizar melhor os papéis `admin`, `coordenador` e `professor`;
-- definir claramente quem pode ler, criar, editar, excluir e executar ações customizadas;
-- garantir consistência entre permissões do `core` e do `users`;
-- cobrir cenários negativos e positivos com testes adicionais.
-
-Subtarefas sugeridas:
-- revisar todas as actions e viewsets;
-- padronizar uso de `permission_classes`;
-- separar permissões por operação quando necessário;
-- documentar matriz de acesso por papel;
-- ampliar testes de autorização.
-
-### Prioridade 2 — Documentar regras de acesso
-Após o refinamento do RBAC:
-- documentar os perfis do sistema;
-- listar endpoints por perfil permitido;
-- registrar regras de negócio e exceções.
-
-### Prioridade 3 — Dashboards mais avançados
-Expandir a visão analítica da turma com:
-- distribuição de notas;
-- métricas por avaliação;
-- indicadores de desempenho;
-- possíveis séries históricas.
-
-### Prioridade 4 — Padronização de erros e contrato de API
 Melhorias recomendadas:
+
 - respostas padronizadas para validação e autorização;
 - melhor semântica HTTP nos endpoints customizados;
 - documentação técnica da API.
 
-### Prioridade 5 — OpenAPI / Swagger
+### Prioridade 2 — OpenAPI / Swagger
+
 Adicionar documentação navegável da API para facilitar consumo e testes.
 
-### Prioridade 6 — Integrações externas
+### Prioridade 3 — Dashboards mais avançados (fase 2)
+
+Próximas evoluções sugeridas:
+
+- recortes por período;
+- tendências/séries históricas;
+- indicadores comparativos entre turmas.
+
+### Prioridade 4 — Integrações externas
+
 Backlog planejado:
+
 - integração com Google Sheets;
 - integração com microserviço de IA;
 - sincronizações futuras com serviços externos.
@@ -190,8 +215,8 @@ Backlog planejado:
 ## 6. Backlog estratégico
 
 Itens ainda não iniciados ou não concluídos:
-- RBAC refinado e documentado;
-- dashboards analíticos avançados;
+
+- dashboards analíticos avançados (fase 2);
 - documentação OpenAPI/Swagger;
 - padronização global de erros;
 - integração com Google Sheets;
@@ -203,36 +228,38 @@ Itens ainda não iniciados ou não concluídos:
 ## 7. Respostas objetivas
 
 ### Os testes foram gerados?
+
 Sim.
 
 Arquivos:
+
 - `app/backend/core/tests.py`
 - `app/backend/users/tests.py`
 
 Status validado:
-- **34 testes passando**.
 
-### O próximo passo é refinar o RBAC?
+- **46 testes passando**.
+
+### O próximo passo é padronizar erros e contrato de API?
+
 Sim.
 
-Hoje essa é a próxima frente mais lógica e de maior valor técnico, porque ela fortalece:
-- segurança;
-- coerência de acesso por perfil;
-- previsibilidade dos endpoints;
-- base para crescer dashboards, integrações e fluxos de negócio sem regressões.
+Com o RBAC documentado e a primeira evolução do dashboard concluída, a próxima frente de maior valor é padronizar respostas de erro e o contrato dos endpoints para reduzir ambiguidade de integração.
 
 ---
 
 ## 8. Resumo executivo
 
 Projeto já entregue até aqui:
+
 - backend funcional;
 - autenticação JWT;
 - API REST principal;
-- permissões iniciais;
+- permissões por papel refinadas (RBAC);
 - testes automatizados;
 - CI/CD ativo;
 - branch principal organizada.
 
 Próximo foco recomendado:
-- **refinar o RBAC com testes e documentação de acesso por papel**.
+
+- **padronizar contrato de erros da API e publicar documentação OpenAPI**.
