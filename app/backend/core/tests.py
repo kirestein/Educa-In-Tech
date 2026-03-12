@@ -430,6 +430,44 @@ class DashboardTurmaTest(APITestCase):
         self.assertEqual(response.data['total_alunos'], 1)
         self.assertEqual(response.data['total_avaliacoes'], 1)
         self.assertEqual(response.data['media_geral'], 8.75)
+        self.assertEqual(response.data['total_notas_lancadas'], 1)
+        self.assertEqual(response.data['percentual_notas_lancadas'], 100.0)
+        self.assertEqual(
+            response.data['distribuicao_notas'],
+            {'ate_5': 0, 'de_5_a_7': 0, 'de_7_a_9': 1, 'acima_9': 0},
+        )
+        self.assertEqual(response.data['media_por_tipo_avaliacao'], [{'tipo': 'mensal', 'media': 8.75}])
+
+    def test_dashboard_turma_sem_notas(self):
+        """Test dashboard metrics when there are no notas for turma."""
+        turma_sem_notas = Turma.objects.create(
+            nome="8A",
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        Aluno.objects.create(
+            nome="Maria",
+            matricula="2026-0002",
+            turma=turma_sem_notas,
+        )
+        Avaliacao.objects.create(
+            titulo="Prova sem nota",
+            tipo="mensal",
+            turma=turma_sem_notas,
+            data_aplicacao="2026-03-11",
+        )
+
+        response = self.client.get(f'/api/dashboard/turma/{turma_sem_notas.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['media_geral'], 0.0)
+        self.assertEqual(response.data['total_notas_lancadas'], 0)
+        self.assertEqual(response.data['percentual_notas_lancadas'], 0.0)
+        self.assertEqual(
+            response.data['distribuicao_notas'],
+            {'ate_5': 0, 'de_5_a_7': 0, 'de_7_a_9': 0, 'acima_9': 0},
+        )
+        self.assertEqual(response.data['media_por_tipo_avaliacao'], [{'tipo': 'mensal', 'media': 0.0}])
 
     def test_dashboard_turma_not_found(self):
         """Test dashboard with invalid turma_id."""

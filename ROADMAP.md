@@ -103,7 +103,7 @@ Cobertura atual inclui:
 
 Status validado:
 
-- **45 testes passando**.
+- **46 testes passando**.
 
 ### 2.9 Pipeline CI/CD
 
@@ -139,6 +139,15 @@ Concluído:
 - papéis `autenticado`, `professor`, `coordenador` e `admin` formalizados;
 - regras de leitura/escrita e ações customizadas registradas como referência de produto e backend.
 
+### 2.12 Dashboards analíticos (primeira evolução)
+
+Concluído:
+
+- dashboard de turma expandido com distribuição de notas por faixa;
+- inclusão de cobertura de lançamento de notas (total e percentual);
+- inclusão de média por tipo de avaliação no endpoint de dashboard;
+- testes do dashboard ampliados para cenários com e sem notas.
+
 ---
 
 ## 3. O que está validado neste momento
@@ -147,7 +156,7 @@ Validado localmente:
 
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 45/45 passando.
+- suíte de testes com 46/46 passando.
 
 Validado estruturalmente:
 
@@ -173,16 +182,7 @@ Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é impor
 
 ## 5. Próximas tarefas recomendadas
 
-### Prioridade 1 — Dashboards mais avançados
-
-Expandir a visão analítica da turma com:
-
-- distribuição de notas;
-- métricas por avaliação;
-- indicadores de desempenho;
-- possíveis séries históricas.
-
-### Prioridade 2 — Padronização de erros e contrato de API
+### Prioridade 1 — Padronização de erros e contrato de API
 
 Melhorias recomendadas:
 
@@ -190,9 +190,17 @@ Melhorias recomendadas:
 - melhor semântica HTTP nos endpoints customizados;
 - documentação técnica da API.
 
-### Prioridade 3 — OpenAPI / Swagger
+### Prioridade 2 — OpenAPI / Swagger
 
 Adicionar documentação navegável da API para facilitar consumo e testes.
+
+### Prioridade 3 — Dashboards mais avançados (fase 2)
+
+Próximas evoluções sugeridas:
+
+- recortes por período;
+- tendências/séries históricas;
+- indicadores comparativos entre turmas.
 
 ### Prioridade 4 — Integrações externas
 
@@ -208,7 +216,7 @@ Backlog planejado:
 
 Itens ainda não iniciados ou não concluídos:
 
-- dashboards analíticos avançados;
+- dashboards analíticos avançados (fase 2);
 - documentação OpenAPI/Swagger;
 - padronização global de erros;
 - integração com Google Sheets;
@@ -230,13 +238,13 @@ Arquivos:
 
 Status validado:
 
-- **45 testes passando**.
+- **46 testes passando**.
 
-### O próximo passo é evoluir dashboards da turma?
+### O próximo passo é padronizar erros e contrato de API?
 
 Sim.
 
-Com o RBAC e a matriz de acesso já documentados, a próxima frente de maior valor é ampliar a camada analítica para apoiar acompanhamento pedagógico com métricas mais ricas.
+Com o RBAC documentado e a primeira evolução do dashboard concluída, a próxima frente de maior valor é padronizar respostas de erro e o contrato dos endpoints para reduzir ambiguidade de integração.
 
 ---
 
@@ -254,4 +262,4 @@ Projeto já entregue até aqui:
 
 Próximo foco recomendado:
 
-- **evoluir dashboards analíticos e padronizar o contrato de erros da API**.
+- **padronizar contrato de erros da API e publicar documentação OpenAPI**.
