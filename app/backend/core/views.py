@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
@@ -26,19 +26,33 @@ def healthcheck(_request):
 class DisciplinaViewSet(viewsets.ModelViewSet):
     queryset = Disciplina.objects.all()
     serializer_class = DisciplinaSerializer
-    permission_classes = [IsAdminOrCoordinatorWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        return [IsAdminOrCoordinatorWrite()]
 
 
 class UnidadeViewSet(viewsets.ModelViewSet):
     queryset = Unidade.objects.all()
     serializer_class = UnidadeSerializer
-    permission_classes = [IsAdminOrCoordinatorWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        return [IsAdminOrCoordinatorWrite()]
 
 
 class TurmaViewSet(viewsets.ModelViewSet):
     queryset = Turma.objects.select_related('disciplina', 'unidade').all()
     serializer_class = TurmaSerializer
-    permission_classes = [IsAdminOrCoordinatorWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        if self.action == 'transferir_aluno':
+            return [IsAdminOrCoordinatorWrite()]
+        return [IsAdminOrCoordinatorWrite()]
 
     @action(detail=True, methods=['post'])
     def transferir_aluno(self, request, pk=None):
@@ -53,19 +67,31 @@ class TurmaViewSet(viewsets.ModelViewSet):
 class AlunoViewSet(viewsets.ModelViewSet):
     queryset = Aluno.objects.select_related('turma').all()
     serializer_class = AlunoSerializer
-    permission_classes = [IsAdminOrCoordinatorWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        return [IsAdminOrCoordinatorWrite()]
 
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
     queryset = Avaliacao.objects.select_related('turma').all()
     serializer_class = AvaliacaoSerializer
-    permission_classes = [IsProfessorOrHigherWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        return [IsProfessorOrHigherWrite()]
 
 
 class NotaViewSet(viewsets.ModelViewSet):
     queryset = Nota.objects.select_related('aluno', 'avaliacao').all()
     serializer_class = NotaSerializer
-    permission_classes = [IsProfessorOrHigherWrite]
+
+    def get_permissions(self):
+        if self.action in {'list', 'retrieve'}:
+            return [IsAuthenticated()]
+        return [IsProfessorOrHigherWrite()]
 
 
 @api_view(['GET'])
