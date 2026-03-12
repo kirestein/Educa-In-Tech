@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
-from .permissions import IsAdminOrCoordinatorWrite, IsProfessorOrHigherWrite
+from .permissions import IsAdminOrCoordinatorWrite, IsProfessorOrHigher, IsProfessorOrHigherWrite
 from .serializers import (
     AlunoSerializer,
     AvaliacaoSerializer,
@@ -18,11 +18,9 @@ from .serializers import (
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def healthcheck(_request):
     return Response({'service': 'backend-core', 'status': 'ok'})
-
-
-healthcheck.permission_classes = [AllowAny]
 
 
 class DisciplinaViewSet(viewsets.ModelViewSet):
@@ -71,6 +69,7 @@ class NotaViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['GET'])
+@permission_classes([IsProfessorOrHigher])
 def dashboard_turma(_request, pk: int):
     turma = get_object_or_404(Turma, id=pk)
     serializer = TurmaDashboardSerializer(data=TurmaDashboardSerializer.build(turma))
