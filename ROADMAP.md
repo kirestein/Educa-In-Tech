@@ -196,6 +196,16 @@ Concluído:
 - parâmetros de recorte (`dias`) e profundidade de recuperação (`top_k`) no fluxo de insights;
 - testes cobrindo sucesso, validações, permissão e erros de integração.
 
+### 2.18 Conexão com banco via DATABASE_URL (Neon)
+
+Concluído:
+
+- suporte no Django para priorizar `DATABASE_URL` (Neon/PostgreSQL) com `dj-database-url`;
+- fallback mantido para configuração por `POSTGRES_*` e, na ausência, SQLite local;
+- parâmetro de pool/keep-alive configurável com `DB_CONN_MAX_AGE`;
+- arquivo `app/.env.example` atualizado com modelo seguro de conexão Neon;
+- guia de setup atualizado com instruções práticas de conexão em desenvolvimento e produção.
+
 ---
 
 ## 3. O que está validado neste momento
