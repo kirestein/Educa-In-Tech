@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'core',
     'users',
 ]
@@ -156,7 +157,22 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'EXCEPTION_HANDLER': 'config.api_errors.custom_exception_handler',
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Educa in Tech API',
+    'DESCRIPTION': 'Documentação OpenAPI da API acadêmica do projeto Educa in Tech.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayRequestDuration': True,
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 

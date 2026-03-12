@@ -1,8 +1,9 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers
 
 from config.api_errors import error_response
 from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
@@ -18,6 +19,18 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    operation_id='core_healthcheck',
+    responses={
+        200: inline_serializer(
+            name='CoreHealthcheckResponse',
+            fields={
+                'service': serializers.CharField(),
+                'status': serializers.CharField(),
+            },
+        )
+    },
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def healthcheck(_request):
@@ -56,6 +69,21 @@ class TurmaViewSet(viewsets.ModelViewSet):
         return [IsAdminOrCoordinatorWrite()]
 
     @action(detail=True, methods=['post'])
+    @extend_schema(
+        operation_id='turma_transferir_aluno',
+        request=inline_serializer(
+            name='TransferirAlunoRequest',
+            fields={'aluno_id': serializers.IntegerField()},
+        ),
+        responses={
+            200: inline_serializer(
+                name='TransferirAlunoResponse',
+                fields={'detail': serializers.CharField()},
+            ),
+            400: OpenApiResponse(description='Campo aluno_id obrigatório.'),
+            404: OpenApiResponse(description='Aluno não encontrado.'),
+        },
+    )
     def transferir_aluno(self, request, pk=None):
         turma_destino = self.get_object()
         aluno_id = request.data.get('aluno_id')
@@ -110,6 +138,13 @@ class NotaViewSet(viewsets.ModelViewSet):
         return [IsProfessorOrHigherWrite()]
 
 
+@extend_schema(
+    operation_id='dashboard_turma',
+    responses={
+        200: TurmaDashboardSerializer,
+        404: OpenApiResponse(description='Turma não encontrada.'),
+    },
+)
 @api_view(['GET'])
 @permission_classes([IsProfessorOrHigher])
 def dashboard_turma(_request, pk: int):

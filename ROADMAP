@@ -103,7 +103,7 @@ Cobertura atual inclui:
 
 Status validado:
 
-- **48 testes passando**.
+- **50 testes passando**.
 
 ### 2.9 Pipeline CI/CD
 
@@ -157,6 +157,16 @@ Concluído:
 - endpoints customizados de `core` e `users` ajustados para o mesmo formato de erro;
 - testes ampliados para validar o payload padronizado dos principais cenários de falha.
 
+### 2.14 Documentação OpenAPI / Swagger
+
+Concluído:
+
+- integração de `drf-spectacular` ao backend Django/DRF;
+- endpoint de schema publicado em `/api/schema/`;
+- Swagger UI publicado em `/api/docs/`;
+- configuração base de metadados OpenAPI adicionada ao projeto;
+- testes de disponibilidade do schema e da interface Swagger adicionados.
+
 ---
 
 ## 3. O que está validado neste momento
@@ -165,7 +175,7 @@ Validado localmente:
 
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 48/48 passando.
+- suíte de testes com 50/50 passando.
 
 Validado estruturalmente:
 
@@ -191,11 +201,7 @@ Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é impor
 
 ## 5. Próximas tarefas recomendadas
 
-### Prioridade 1 — OpenAPI / Swagger
-
-Adicionar documentação navegável da API para facilitar consumo e testes.
-
-### Prioridade 2 — Dashboards mais avançados (fase 2)
+### Prioridade 1 — Dashboards mais avançados (fase 2)
 
 Próximas evoluções sugeridas:
 
@@ -203,13 +209,21 @@ Próximas evoluções sugeridas:
 - tendências/séries históricas;
 - indicadores comparativos entre turmas.
 
-### Prioridade 3 — Integrações externas
+### Prioridade 2 — Integrações externas
 
 Backlog planejado:
 
 - integração com Google Sheets;
 - integração com microserviço de IA;
 - sincronizações futuras com serviços externos.
+
+### Prioridade 3 — Endurecimento para produção
+
+Evoluções recomendadas:
+
+- segurança adicional e gestão de segredos;
+- observabilidade e logs estruturados;
+- ajustes de deploy e configuração por ambiente.
 
 ---
 
@@ -218,7 +232,6 @@ Backlog planejado:
 Itens ainda não iniciados ou não concluídos:
 
 - dashboards analíticos avançados (fase 2);
-- documentação OpenAPI/Swagger;
 - integração com Google Sheets;
 - integração backend ↔ microserviço de IA;
 - endurecimento para produção (segurança, observabilidade e configurações de deploy).
@@ -238,13 +251,13 @@ Arquivos:
 
 Status validado:
 
-- **48 testes passando**.
+- **50 testes passando**.
 
-### O próximo passo é publicar documentação OpenAPI?
+### O próximo passo é evoluir dashboards da turma (fase 2)?
 
 Sim.
 
-Com o RBAC documentado, o dashboard evoluído e o contrato de erros estabilizado, a próxima frente de maior valor é publicar documentação navegável da API para acelerar integração e testes.
+Com RBAC, contrato de erros e OpenAPI já entregues, a próxima frente de maior valor é aprofundar a camada analítica com recortes temporais e indicadores comparativos.
 
 ---
 
@@ -262,4 +275,4 @@ Projeto já entregue até aqui:
 
 Próximo foco recomendado:
 
-- **publicar documentação OpenAPI e seguir com a fase 2 dos dashboards analíticos**.
+- **evoluir dashboards analíticos na fase 2 e preparar integrações externas**.
