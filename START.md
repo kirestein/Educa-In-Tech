@@ -121,6 +121,19 @@ Deploy em nuvem: configurar pipelines de CI/CD e publicar em um provedor como He
 
 <img src="assets/img/arc.png" />
 
+## Setup rápido — conexão com banco (Neon)
+
+1. No arquivo `app/.env`, configure a conexão principal do banco:
+
+```bash
+DATABASE_URL="postgresql://<USUARIO>:<SENHA>@ep-<hash>.c-2.us-east-1.aws.neon.tech/<NOME_DO_BANCO>?sslmode=require&channel_binding=require"
+DB_CONN_MAX_AGE=600
+```
+
+2. Caso `DATABASE_URL` não esteja definida, o backend continua aceitando o fallback com `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST` e `POSTGRES_PORT`.
+
+3. Para desenvolvimento local sem PostgreSQL, remova as variáveis acima e o projeto usará SQLite automaticamente.
+
 ## Setup rápido — IA self-hosted + RAG
 
 1. Copie o arquivo de exemplo de ambiente:
