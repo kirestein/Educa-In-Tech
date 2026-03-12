@@ -10,6 +10,28 @@ A partir desta etapa, este arquivo será atualizado a cada entrega incremental (
 - como validar;
 - status do check técnico.
 
+## 0.1) Git & Commits
+
+**Convenção de branches:** `feat/`, `fix/`, `docs/`, `chore/` (ex: `feat/backend-bootstrap-academic-api`)
+
+**Convenção de commits:** Type(scope): mensagem breve
+- `feat`: nova feature
+- `fix`: correção de bug
+- `docs`: documentação
+- `ci`: pipeline/automação
+
+**Pipeline CI/CD:**
+- GitHub Actions automaticamente valida cada push
+- Arquivo: `.github/workflows/backend-checks.yml`
+- Checagens: `manage.py check`, migrations validation, testes, code style hints
+
+**Status atual:**
+- Branch: `feat/backend-bootstrap-academic-api`
+- Commits: 2
+  - `7e71de0` feat(backend): bootstrap academic API and JWT auth base
+  - `2afd214` ci: add GitHub Actions pipeline for backend checks
+- Remoto: `origin` (git@github.com:kirestein/Educa-In-Tech.git)
+
 ## 1) Contexto do que foi feito
 
 Foi iniciada a estrutura funcional do backend Django para o domínio acadêmico, saindo de uma base quase vazia para uma API REST com modelos, rotas, serializers, admin e migração inicial.
