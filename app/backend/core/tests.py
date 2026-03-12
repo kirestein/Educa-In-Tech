@@ -247,6 +247,8 @@ class APIAuthenticationTest(APITestCase):
         """Test that API endpoints require authentication."""
         response = self.client.get('/api/disciplinas/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['error']['code'], 'not_authenticated')
+        self.assertIn('message', response.data['error'])
 
     def test_api_with_token(self):
         """Test API call with valid token."""
@@ -376,6 +378,20 @@ class TurmaTransferAluno(APITestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error']['code'], 'not_found')
+        self.assertEqual(response.data['error']['message'], 'Aluno não encontrado.')
+
+    def test_transfer_aluno_missing_id(self):
+        """Test transferring without aluno_id."""
+        response = self.client.post(
+            f'/api/turmas/{self.turma2.id}/transferir_aluno/',
+            {},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['message'], 'Campo obrigatório: aluno_id.')
+        self.assertEqual(response.data['error']['details']['aluno_id'], ['Este campo é obrigatório.'])
 
 
 class DashboardTurmaTest(APITestCase):
@@ -473,6 +489,8 @@ class DashboardTurmaTest(APITestCase):
         """Test dashboard with invalid turma_id."""
         response = self.client.get('/api/dashboard/turma/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error']['code'], 'not_found')
+        self.assertEqual(response.data['error']['message'], 'Turma não encontrada.')
 
 
 class RBACCoreAccessTest(APITestCase):
@@ -518,6 +536,7 @@ class RBACCoreAccessTest(APITestCase):
         self._auth('regular', 'RegularPassword123')
         response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error']['code'], 'permission_denied')
 
     def test_dashboard_allows_professor(self):
         self._auth('prof', 'ProfessorPassword123')

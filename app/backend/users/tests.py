@@ -38,6 +38,8 @@ class UserAuthenticationTest(APITestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['error']['code'], 'not_authenticated')
+        self.assertIn('message', response.data['error'])
 
     def test_token_refresh(self):
         """Test refreshing access token."""
@@ -76,6 +78,7 @@ class UserMeEndpointTest(APITestCase):
         """Test that /me endpoint requires authentication."""
         response = self.client.get('/api/users/me/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['error']['code'], 'not_authenticated')
 
     def test_me_authenticated(self):
         """Test /me endpoint with valid token."""
@@ -134,6 +137,7 @@ class RoleAssignmentTest(APITestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error']['code'], 'permission_denied')
 
     def test_assign_role_as_admin(self):
         """Test assigning role as admin."""
@@ -181,6 +185,8 @@ class RoleAssignmentTest(APITestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['role'], ['Valor inválido. Use professor ou coordenador.'])
 
     def test_assign_role_nonexistent_user(self):
         """Test assigning role to non-existent user."""
@@ -204,3 +210,24 @@ class RoleAssignmentTest(APITestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error']['code'], 'not_found')
+        self.assertEqual(response.data['error']['message'], 'Usuário não encontrado.')
+
+    def test_assign_role_missing_fields(self):
+        """Test assigning role without required fields."""
+        login_response = self.client.post(
+            '/api/users/token/',
+            {
+                'username': 'admin',
+                'password': 'AdminPassword123'
+            },
+            format='json'
+        )
+        token = login_response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        response = self.client.post('/api/users/roles/assign/', {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['username'], ['Este campo é obrigatório.'])
+        self.assertEqual(response.data['error']['details']['role'], ['Este campo é obrigatório.'])
