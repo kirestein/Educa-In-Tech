@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from config.api_errors import error_response
 from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
 from .permissions import IsAdminOrCoordinatorWrite, IsProfessorOrHigher, IsProfessorOrHigherWrite
 from .serializers import (
@@ -58,7 +59,22 @@ class TurmaViewSet(viewsets.ModelViewSet):
     def transferir_aluno(self, request, pk=None):
         turma_destino = self.get_object()
         aluno_id = request.data.get('aluno_id')
-        aluno = get_object_or_404(Aluno, id=aluno_id)
+        if not aluno_id:
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='validation_error',
+                message='Campo obrigatório: aluno_id.',
+                details={'aluno_id': ['Este campo é obrigatório.']},
+            )
+
+        aluno = Aluno.objects.filter(id=aluno_id).first()
+        if not aluno:
+            return error_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                code='not_found',
+                message='Aluno não encontrado.',
+            )
+
         aluno.turma = turma_destino
         aluno.save(update_fields=['turma'])
         return Response({'detail': 'Aluno transferido com sucesso.'}, status=status.HTTP_200_OK)
@@ -97,7 +113,14 @@ class NotaViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsProfessorOrHigher])
 def dashboard_turma(_request, pk: int):
-    turma = get_object_or_404(Turma, id=pk)
+    turma = Turma.objects.filter(id=pk).first()
+    if not turma:
+        return error_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code='not_found',
+            message='Turma não encontrada.',
+        )
+
     serializer = TurmaDashboardSerializer(data=TurmaDashboardSerializer.build(turma))
     serializer.is_valid(raise_exception=True)
     return Response(serializer.validated_data)

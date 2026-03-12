@@ -103,7 +103,7 @@ Cobertura atual inclui:
 
 Status validado:
 
-- **46 testes passando**.
+- **48 testes passando**.
 
 ### 2.9 Pipeline CI/CD
 
@@ -148,6 +148,15 @@ Concluído:
 - inclusão de média por tipo de avaliação no endpoint de dashboard;
 - testes do dashboard ampliados para cenários com e sem notas.
 
+### 2.13 Padronização de erros e contrato de API
+
+Concluído:
+
+- contrato de erro padronizado com envelope único para autenticação, permissão, validação e not found;
+- handler global de exceções DRF configurado para respostas consistentes;
+- endpoints customizados de `core` e `users` ajustados para o mesmo formato de erro;
+- testes ampliados para validar o payload padronizado dos principais cenários de falha.
+
 ---
 
 ## 3. O que está validado neste momento
@@ -156,7 +165,7 @@ Validado localmente:
 
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 46/46 passando.
+- suíte de testes com 48/48 passando.
 
 Validado estruturalmente:
 
@@ -182,19 +191,11 @@ Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é impor
 
 ## 5. Próximas tarefas recomendadas
 
-### Prioridade 1 — Padronização de erros e contrato de API
-
-Melhorias recomendadas:
-
-- respostas padronizadas para validação e autorização;
-- melhor semântica HTTP nos endpoints customizados;
-- documentação técnica da API.
-
-### Prioridade 2 — OpenAPI / Swagger
+### Prioridade 1 — OpenAPI / Swagger
 
 Adicionar documentação navegável da API para facilitar consumo e testes.
 
-### Prioridade 3 — Dashboards mais avançados (fase 2)
+### Prioridade 2 — Dashboards mais avançados (fase 2)
 
 Próximas evoluções sugeridas:
 
@@ -202,7 +203,7 @@ Próximas evoluções sugeridas:
 - tendências/séries históricas;
 - indicadores comparativos entre turmas.
 
-### Prioridade 4 — Integrações externas
+### Prioridade 3 — Integrações externas
 
 Backlog planejado:
 
@@ -218,7 +219,6 @@ Itens ainda não iniciados ou não concluídos:
 
 - dashboards analíticos avançados (fase 2);
 - documentação OpenAPI/Swagger;
-- padronização global de erros;
 - integração com Google Sheets;
 - integração backend ↔ microserviço de IA;
 - endurecimento para produção (segurança, observabilidade e configurações de deploy).
@@ -238,13 +238,13 @@ Arquivos:
 
 Status validado:
 
-- **46 testes passando**.
+- **48 testes passando**.
 
-### O próximo passo é padronizar erros e contrato de API?
+### O próximo passo é publicar documentação OpenAPI?
 
 Sim.
 
-Com o RBAC documentado e a primeira evolução do dashboard concluída, a próxima frente de maior valor é padronizar respostas de erro e o contrato dos endpoints para reduzir ambiguidade de integração.
+Com o RBAC documentado, o dashboard evoluído e o contrato de erros estabilizado, a próxima frente de maior valor é publicar documentação navegável da API para acelerar integração e testes.
 
 ---
 
@@ -262,4 +262,4 @@ Projeto já entregue até aqui:
 
 Próximo foco recomendado:
 
-- **padronizar contrato de erros da API e publicar documentação OpenAPI**.
+- **publicar documentação OpenAPI e seguir com a fase 2 dos dashboards analíticos**.

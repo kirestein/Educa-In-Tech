@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from config.api_errors import error_response
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -34,21 +36,32 @@ def assign_role(request):
     role = request.data.get('role')
 
     if not username or not role:
-        return Response(
-            {'detail': 'Campos obrigatórios: username e role.'},
-            status=status.HTTP_400_BAD_REQUEST,
+        return error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code='validation_error',
+            message='Campos obrigatórios: username e role.',
+            details={
+                'username': ['Este campo é obrigatório.'] if not username else [],
+                'role': ['Este campo é obrigatório.'] if not role else [],
+            },
         )
 
     role = str(role).strip().lower()
     if role not in {'professor', 'coordenador'}:
-        return Response(
-            {'detail': 'Role inválida. Use: professor ou coordenador.'},
-            status=status.HTTP_400_BAD_REQUEST,
+        return error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code='validation_error',
+            message='Role inválida. Use: professor ou coordenador.',
+            details={'role': ['Valor inválido. Use professor ou coordenador.']},
         )
 
     user = User.objects.filter(username=username).first()
     if not user:
-        return Response({'detail': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        return error_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code='not_found',
+            message='Usuário não encontrado.',
+        )
 
     group, _ = Group.objects.get_or_create(name=role)
     user.groups.add(group)
