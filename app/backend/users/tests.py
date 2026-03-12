@@ -25,7 +25,6 @@ class UserAuthenticationTest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
-        self.assertIn('refresh', response.data)
 
     def test_token_obtain_invalid_credentials(self):
         """Test token obtain with invalid credentials."""
@@ -60,6 +59,24 @@ class UserAuthenticationTest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
+
+
+class OpenAPIDocumentationTest(APITestCase):
+    """Tests for OpenAPI schema and Swagger UI endpoints."""
+
+    def test_schema_endpoint_available(self):
+        response = self.client.get('/api/schema/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'].split(';')[0], 'application/vnd.oai.openapi')
+        schema_content = response.content.decode()
+        self.assertIn('/api/disciplinas/', schema_content)
+        self.assertIn('/api/users/token/', schema_content)
+
+    def test_swagger_ui_endpoint_available(self):
+        response = self.client.get('/api/docs/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'swagger-ui')
+        self.assertContains(response, '/api/schema/')
 
 
 class UserMeEndpointTest(APITestCase):

@@ -3,16 +3,46 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers
 
 from config.api_errors import error_response
 
 
+@extend_schema(
+    operation_id='users_healthcheck',
+    responses={
+        200: inline_serializer(
+            name='UsersHealthcheckResponse',
+            fields={
+                'service': serializers.CharField(),
+                'status': serializers.CharField(),
+            },
+        )
+    },
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def healthcheck(_request):
     return Response({'service': 'backend-users', 'status': 'ok'})
 
 
+@extend_schema(
+    operation_id='users_me',
+    responses={
+        200: inline_serializer(
+            name='UsersMeResponse',
+            fields={
+                'id': serializers.IntegerField(),
+                'username': serializers.CharField(),
+                'email': serializers.EmailField(allow_blank=True),
+                'is_staff': serializers.BooleanField(),
+                'is_superuser': serializers.BooleanField(),
+                'groups': serializers.ListField(child=serializers.CharField()),
+            },
+        )
+    },
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def me(request):
@@ -29,6 +59,28 @@ def me(request):
     )
 
 
+@extend_schema(
+    operation_id='users_assign_role',
+    request=inline_serializer(
+        name='AssignRoleRequest',
+        fields={
+            'username': serializers.CharField(),
+            'role': serializers.CharField(),
+        },
+    ),
+    responses={
+        200: inline_serializer(
+            name='AssignRoleResponse',
+            fields={
+                'detail': serializers.CharField(),
+                'username': serializers.CharField(),
+                'groups': serializers.ListField(child=serializers.CharField()),
+            },
+        ),
+        400: OpenApiResponse(description='Campos inválidos para atribuição de role.'),
+        404: OpenApiResponse(description='Usuário não encontrado.'),
+    },
+)
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def assign_role(request):

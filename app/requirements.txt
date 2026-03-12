@@ -9,6 +9,7 @@ click==8.3.1
 cryptography==46.0.5
 Django==6.0.3
 djangorestframework==3.16.1
+drf-spectacular==0.29.0
 djangorestframework-simplejwt==5.5.1
 fastapi==0.135.1
 google-api-core==2.30.0
