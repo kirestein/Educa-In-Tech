@@ -387,6 +387,8 @@ class DashboardTurmaTest(APITestCase):
             username="testuser",
             password="TestPassword123"
         )
+        group, _ = Group.objects.get_or_create(name="professor")
+        self.user.groups.add(group)
         token_response = self.client.post(
             '/api/users/token/',
             {'username': 'testuser', 'password': 'TestPassword123'},
@@ -433,3 +435,150 @@ class DashboardTurmaTest(APITestCase):
         """Test dashboard with invalid turma_id."""
         response = self.client.get('/api/dashboard/turma/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class RBACCoreAccessTest(APITestCase):
+    """RBAC checks for core endpoints by role."""
+
+    def setUp(self):
+        self.disc = Disciplina.objects.create(nome="Matemática", codigo="MAT-001")
+        self.unit = Unidade.objects.create(nome="Escola 1", cidade="SP", estado="SP")
+        self.turma = Turma.objects.create(
+            nome="7A",
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+
+        self.regular = User.objects.create_user(username="regular", password="RegularPassword123")
+        self.professor = User.objects.create_user(username="prof", password="ProfessorPassword123")
+        self.coordenador = User.objects.create_user(username="coord", password="CoordenadorPassword123")
+        professor_group, _ = Group.objects.get_or_create(name="professor")
+        coordenador_group, _ = Group.objects.get_or_create(name="coordenador")
+        self.professor.groups.add(professor_group)
+        self.coordenador.groups.add(coordenador_group)
+
+        self.aluno = Aluno.objects.create(nome="Aluno RBAC", matricula="RBAC-0001", turma=self.turma)
+        self.avaliacao = Avaliacao.objects.create(
+            titulo="Aval RBAC",
+            tipo="mensal",
+            turma=self.turma,
+            data_aplicacao="2026-03-10",
+            peso=Decimal("1.00"),
+        )
+
+    def _auth(self, username: str, password: str):
+        response = self.client.post(
+            '/api/users/token/',
+            {'username': username, 'password': password},
+            format='json',
+        )
+        token = response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    def test_dashboard_denies_regular_user(self):
+        self._auth('regular', 'RegularPassword123')
+        response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_dashboard_allows_professor(self):
+        self._auth('prof', 'ProfessorPassword123')
+        response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_disciplina_list_allows_regular_user(self):
+        self._auth('regular', 'RegularPassword123')
+        response = self.client.get('/api/disciplinas/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_disciplina_create_denies_professor(self):
+        self._auth('prof', 'ProfessorPassword123')
+        response = self.client.post(
+            '/api/disciplinas/',
+            {'nome': 'Física', 'codigo': 'FIS-001'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_disciplina_create_allows_coordenador(self):
+        self._auth('coord', 'CoordenadorPassword123')
+        response = self.client.post(
+            '/api/disciplinas/',
+            {'nome': 'Química', 'codigo': 'QUI-001'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_avaliacao_create_denies_regular_user(self):
+        self._auth('regular', 'RegularPassword123')
+        payload = {
+            'titulo': 'Teste RBAC',
+            'tipo': 'mensal',
+            'turma': self.turma.id,
+            'data_aplicacao': '2026-03-10',
+            'peso': '1.00',
+        }
+        response = self.client.post('/api/avaliacoes/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_avaliacao_create_allows_professor(self):
+        self._auth('prof', 'ProfessorPassword123')
+        payload = {
+            'titulo': 'Teste RBAC',
+            'tipo': 'mensal',
+            'turma': self.turma.id,
+            'data_aplicacao': '2026-03-10',
+            'peso': '1.00',
+        }
+        response = self.client.post('/api/avaliacoes/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_nota_create_denies_regular_user(self):
+        self._auth('regular', 'RegularPassword123')
+        payload = {
+            'aluno': self.aluno.id,
+            'avaliacao': self.avaliacao.id,
+            'valor': '7.50',
+        }
+        response = self.client.post('/api/notas/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_nota_create_allows_professor(self):
+        self._auth('prof', 'ProfessorPassword123')
+        payload = {
+            'aluno': self.aluno.id,
+            'avaliacao': self.avaliacao.id,
+            'valor': '8.50',
+        }
+        response = self.client.post('/api/notas/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_transfer_aluno_denies_professor(self):
+        self._auth('prof', 'ProfessorPassword123')
+        turma_destino = Turma.objects.create(
+            nome="7B",
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        response = self.client.post(
+            f'/api/turmas/{turma_destino.id}/transferir_aluno/',
+            {'aluno_id': self.aluno.id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_transfer_aluno_allows_coordenador(self):
+        self._auth('coord', 'CoordenadorPassword123')
+        turma_destino = Turma.objects.create(
+            nome="7C",
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        response = self.client.post(
+            f'/api/turmas/{turma_destino.id}/transferir_aluno/',
+            {'aluno_id': self.aluno.id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

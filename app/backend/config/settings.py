@@ -26,7 +26,15 @@ load_dotenv(BASE_DIR.parent / '.env')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-me-please-change-this')
+
+
+def _get_jwt_signing_key() -> str:
+    """Return a JWT signing key with at least 32 chars to satisfy RFC 7518."""
+    key = os.getenv('JWT_SIGNING_KEY') or SECRET_KEY
+    if len(key) < 32:
+        return f'{key}-please-change-this-jwt-key'
+    return key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
@@ -154,4 +162,5 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '30'))),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_DAYS', '1'))),
+    'SIGNING_KEY': _get_jwt_signing_key(),
 }
