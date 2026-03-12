@@ -453,6 +453,10 @@ class DashboardTurmaTest(APITestCase):
             {'ate_5': 0, 'de_5_a_7': 0, 'de_7_a_9': 1, 'acima_9': 0},
         )
         self.assertEqual(response.data['media_por_tipo_avaliacao'], [{'tipo': 'mensal', 'media': 8.75}])
+        self.assertEqual(response.data['serie_avaliacoes'][0]['titulo'], 'Prova 1')
+        self.assertEqual(response.data['comparativo_turma']['posicao'], 1)
+        self.assertEqual(response.data['comparativo_turma']['total_turmas'], 1)
+        self.assertIsNone(response.data['recorte_periodo'])
 
     def test_dashboard_turma_sem_notas(self):
         """Test dashboard metrics when there are no notas for turma."""
@@ -491,6 +495,67 @@ class DashboardTurmaTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data['error']['code'], 'not_found')
         self.assertEqual(response.data['error']['message'], 'Turma não encontrada.')
+
+    def test_dashboard_turma_comparativo_e_serie_recente(self):
+        """Test dashboard returns cohort comparison and recent evaluation series."""
+        turma_coorte = Turma.objects.create(
+            nome='7B',
+            ano_letivo=2026,
+            disciplina=self.disc,
+            unidade=self.unit,
+        )
+        aluno_coorte = Aluno.objects.create(nome='Pedro', matricula='2026-0003', turma=turma_coorte)
+        avaliacao_coorte = Avaliacao.objects.create(
+            titulo='Prova Coorte',
+            tipo='mensal',
+            turma=turma_coorte,
+            data_aplicacao='2026-03-10',
+        )
+        Nota.objects.create(aluno=aluno_coorte, avaliacao=avaliacao_coorte, valor=Decimal('6.00'))
+
+        avaliacao_antiga = Avaliacao.objects.create(
+            titulo='Prova 0',
+            tipo='trimestral',
+            turma=self.turma,
+            data_aplicacao='2026-03-01',
+        )
+        Nota.objects.create(aluno=self.aluno, avaliacao=avaliacao_antiga, valor=Decimal('7.00'))
+
+        response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['serie_avaliacoes']), 2)
+        self.assertEqual(response.data['serie_avaliacoes'][0]['titulo'], 'Prova 1')
+        self.assertEqual(response.data['serie_avaliacoes'][1]['titulo'], 'Prova 0')
+        self.assertEqual(response.data['comparativo_turma']['posicao'], 1)
+        self.assertEqual(response.data['comparativo_turma']['total_turmas'], 2)
+        self.assertEqual(response.data['comparativo_turma']['media_coorte'], 7.25)
+        self.assertEqual(response.data['comparativo_turma']['diferenca_media'], Decimal('0.63'))
+
+    def test_dashboard_turma_recorte_por_periodo(self):
+        """Test dashboard applies period cut based on latest evaluation date."""
+        avaliacao_antiga = Avaliacao.objects.create(
+            titulo='Prova Antiga',
+            tipo='trimestral',
+            turma=self.turma,
+            data_aplicacao='2026-02-20',
+        )
+        Nota.objects.create(aluno=self.aluno, avaliacao=avaliacao_antiga, valor=Decimal('5.00'))
+
+        response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/?dias=7')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['recorte_periodo']['dias'], 7)
+        self.assertEqual(str(response.data['recorte_periodo']['data_inicio']), '2026-03-04')
+        self.assertEqual(str(response.data['recorte_periodo']['data_fim']), '2026-03-10')
+        self.assertEqual(response.data['recorte_periodo']['total_avaliacoes_periodo'], 1)
+        self.assertEqual(response.data['recorte_periodo']['total_notas_periodo'], 1)
+        self.assertEqual(response.data['recorte_periodo']['media_periodo'], 8.75)
+
+    def test_dashboard_turma_recorte_dias_invalido(self):
+        """Test dashboard rejects invalid dias query param."""
+        response = self.client.get(f'/api/dashboard/turma/{self.turma.id}/?dias=abc')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'validation_error')
+        self.assertEqual(response.data['error']['details']['dias'], ['Informe um número inteiro positivo.'])
 
 
 class RBACCoreAccessTest(APITestCase):

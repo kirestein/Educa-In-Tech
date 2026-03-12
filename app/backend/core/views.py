@@ -2,7 +2,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers
 
 from config.api_errors import error_response
@@ -140,14 +140,24 @@ class NotaViewSet(viewsets.ModelViewSet):
 
 @extend_schema(
     operation_id='dashboard_turma',
+    parameters=[
+        OpenApiParameter(
+            name='dias',
+            type=int,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            description='Recorte opcional em dias, calculado a partir da avaliação mais recente da turma.',
+        )
+    ],
     responses={
         200: TurmaDashboardSerializer,
+        400: OpenApiResponse(description='Parâmetro dias inválido.'),
         404: OpenApiResponse(description='Turma não encontrada.'),
     },
 )
 @api_view(['GET'])
 @permission_classes([IsProfessorOrHigher])
-def dashboard_turma(_request, pk: int):
+def dashboard_turma(request, pk: int):
     turma = Turma.objects.filter(id=pk).first()
     if not turma:
         return error_response(
@@ -156,6 +166,27 @@ def dashboard_turma(_request, pk: int):
             message='Turma não encontrada.',
         )
 
-    serializer = TurmaDashboardSerializer(data=TurmaDashboardSerializer.build(turma))
+    dias_param = request.query_params.get('dias')
+    dias = None
+    if dias_param is not None:
+        try:
+            dias = int(dias_param)
+        except (TypeError, ValueError):
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='validation_error',
+                message='Parâmetro dias deve ser um inteiro positivo.',
+                details={'dias': ['Informe um número inteiro positivo.']},
+            )
+
+        if dias <= 0:
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='validation_error',
+                message='Parâmetro dias deve ser um inteiro positivo.',
+                details={'dias': ['Informe um número inteiro positivo.']},
+            )
+
+    serializer = TurmaDashboardSerializer(data=TurmaDashboardSerializer.build(turma, dias=dias))
     serializer.is_valid(raise_exception=True)
     return Response(serializer.validated_data)

@@ -103,7 +103,7 @@ Cobertura atual inclui:
 
 Status validado:
 
-- **50 testes passando**.
+- **53 testes passando**.
 
 ### 2.9 Pipeline CI/CD
 
@@ -167,6 +167,16 @@ Concluído:
 - configuração base de metadados OpenAPI adicionada ao projeto;
 - testes de disponibilidade do schema e da interface Swagger adicionados.
 
+### 2.15 Dashboards analíticos (fase 2)
+
+Concluído:
+
+- recorte por período adicionado ao dashboard via parâmetro `dias`;
+- série recente de avaliações incluída no payload do dashboard;
+- comparativo da turma com a coorte da mesma unidade/disciplina/ano_letivo incluído;
+- validação do parâmetro de recorte adicionada ao endpoint;
+- testes ampliados para recorte temporal, série recente e comparativo entre turmas.
+
 ---
 
 ## 3. O que está validado neste momento
@@ -175,7 +185,7 @@ Validado localmente:
 
 - `manage.py check`;
 - `manage.py collectstatic --noinput --dry-run`;
-- suíte de testes com 50/50 passando.
+- suíte de testes com 53/53 passando.
 
 Validado estruturalmente:
 
@@ -201,15 +211,7 @@ Com as mudanças de RBAC e JWT já publicadas na branch de refinamento, é impor
 
 ## 5. Próximas tarefas recomendadas
 
-### Prioridade 1 — Dashboards mais avançados (fase 2)
-
-Próximas evoluções sugeridas:
-
-- recortes por período;
-- tendências/séries históricas;
-- indicadores comparativos entre turmas.
-
-### Prioridade 2 — Integrações externas
+### Prioridade 1 — Integrações externas
 
 Backlog planejado:
 
@@ -217,7 +219,7 @@ Backlog planejado:
 - integração com microserviço de IA;
 - sincronizações futuras com serviços externos.
 
-### Prioridade 3 — Endurecimento para produção
+### Prioridade 2 — Endurecimento para produção
 
 Evoluções recomendadas:
 
@@ -231,7 +233,6 @@ Evoluções recomendadas:
 
 Itens ainda não iniciados ou não concluídos:
 
-- dashboards analíticos avançados (fase 2);
 - integração com Google Sheets;
 - integração backend ↔ microserviço de IA;
 - endurecimento para produção (segurança, observabilidade e configurações de deploy).
@@ -251,13 +252,13 @@ Arquivos:
 
 Status validado:
 
-- **50 testes passando**.
+- **53 testes passando**.
 
-### O próximo passo é evoluir dashboards da turma (fase 2)?
+### O próximo passo é iniciar integrações externas?
 
 Sim.
 
-Com RBAC, contrato de erros e OpenAPI já entregues, a próxima frente de maior valor é aprofundar a camada analítica com recortes temporais e indicadores comparativos.
+Com RBAC, contrato de erros, OpenAPI e dashboards fase 2 já entregues, a próxima frente de maior valor é conectar o backend a serviços externos prioritários.
 
 ---
 
@@ -275,4 +276,4 @@ Projeto já entregue até aqui:
 
 Próximo foco recomendado:
 
-- **evoluir dashboards analíticos na fase 2 e preparar integrações externas**.
+- **iniciar integrações externas, começando por Google Sheets ou microserviço de IA**.
