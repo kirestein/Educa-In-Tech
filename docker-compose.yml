@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+    container_name: educa-in-tech-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-me-in-production
+      - JWT_SIGNING_KEY=dev-jwt-key-at-least-32-characters-long-please
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - DATABASE_URL=sqlite:////app/db.sqlite3
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
+      - LOCAL_LLM_ENABLED=False
+    volumes:
+      - ./app/backend:/app
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - educa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/docs/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+    container_name: educa-in-tech-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./app/frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: npm run dev -- --host
+    networks:
+      - educa-network
+
+networks:
+  educa-network:
+    driver: bridge

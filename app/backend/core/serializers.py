@@ -4,7 +4,16 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Avg, Count, Max, Q
 from rest_framework import serializers
 
-from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
+from .models import (
+    Aluno,
+    Avaliacao,
+    Disciplina,
+    KnowledgeChunk,
+    KnowledgeDocument,
+    Nota,
+    Turma,
+    Unidade,
+)
 
 
 class DisciplinaSerializer(serializers.ModelSerializer):
@@ -49,6 +58,22 @@ class NotaSerializer(serializers.ModelSerializer):
         model = Nota
         fields = '__all__'
         read_only_fields = ('id',)
+
+
+class KnowledgeChunkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = KnowledgeChunk
+        fields = '__all__'
+        read_only_fields = ('id', 'created_at')
+
+
+class KnowledgeDocumentSerializer(serializers.ModelSerializer):
+    chunks = KnowledgeChunkSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = KnowledgeDocument
+        fields = '__all__'
+        read_only_fields = ('id', 'created_at', 'updated_at')
 
 
 class MediaPorTipoAvaliacaoSerializer(serializers.Serializer):

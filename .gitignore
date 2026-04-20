@@ -49,6 +49,11 @@ media/
 *.sqlite3
 *.sqlite3-journal
 
+# Local backup artifacts
+app/backend/backups/
+*.dump
+*.sha256
+
 # Unit test / coverage reports
 htmlcov/
 .tox/

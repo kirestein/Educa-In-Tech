@@ -5,6 +5,8 @@ from .views import (
     AlunoViewSet,
     AvaliacaoViewSet,
     DisciplinaViewSet,
+    KnowledgeChunkViewSet,
+    KnowledgeDocumentViewSet,
     NotaViewSet,
     TurmaViewSet,
     UnidadeViewSet,
@@ -21,6 +23,8 @@ router.register('turmas', TurmaViewSet, basename='turmas')
 router.register('alunos', AlunoViewSet, basename='alunos')
 router.register('avaliacoes', AvaliacaoViewSet, basename='avaliacoes')
 router.register('notas', NotaViewSet, basename='notas')
+router.register('knowledge/documents', KnowledgeDocumentViewSet, basename='knowledge-documents')
+router.register('knowledge/chunks', KnowledgeChunkViewSet, basename='knowledge-chunks')
 
 urlpatterns = [
     path('health/', healthcheck, name='core-healthcheck'),

@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Aluno, Avaliacao, Disciplina, Nota, Turma, Unidade
+from .models import (
+    Aluno,
+    Avaliacao,
+    Disciplina,
+    KnowledgeChunk,
+    KnowledgeDocument,
+    Nota,
+    Turma,
+    Unidade,
+)
 
 
 @admin.register(Disciplina)
@@ -40,3 +49,17 @@ class AvaliacaoAdmin(admin.ModelAdmin):
 class NotaAdmin(admin.ModelAdmin):
     list_display = ('id', 'aluno', 'avaliacao', 'valor', 'entregue_em')
     list_filter = ('avaliacao',)
+
+
+@admin.register(KnowledgeDocument)
+class KnowledgeDocumentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'source_id', 'source_type', 'version', 'turma', 'is_active', 'updated_at')
+    list_filter = ('source_type', 'is_active')
+    search_fields = ('source_id', 'title', 'checksum')
+
+
+@admin.register(KnowledgeChunk)
+class KnowledgeChunkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'document', 'position', 'title', 'token_count', 'embedding_model', 'embedding_dim')
+    list_filter = ('embedding_model',)
+    search_fields = ('title', 'content')

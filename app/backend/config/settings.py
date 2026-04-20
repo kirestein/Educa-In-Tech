@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'drf_spectacular',
     'core',
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -194,13 +196,41 @@ SIMPLE_JWT = {
 }
 
 
+# CORS Configuration for Frontend Integration
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+
 GOOGLE_SHEETS_CREDENTIALS_FILE = os.getenv('GOOGLE_SHEETS_CREDENTIALS_FILE', '')
 GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID = os.getenv('GOOGLE_SHEETS_DEFAULT_SPREADSHEET_ID', '')
 GOOGLE_SHEETS_DEFAULT_WORKSHEET = os.getenv('GOOGLE_SHEETS_DEFAULT_WORKSHEET', 'dashboard_turmas')
 
 LOCAL_LLM_ENABLED = os.getenv('LOCAL_LLM_ENABLED', 'False').lower() == 'true'
-LOCAL_LLM_BASE_URL = os.getenv('LOCAL_LLM_BASE_URL', 'http://localhost:11434')
-LOCAL_LLM_MODEL = os.getenv('LOCAL_LLM_MODEL', 'qwen2.5:7b-instruct')
+LOCAL_LLM_BASE_URL = (
+    os.getenv('LOCAL_LLM_BASE_URL')
+    or os.getenv('OLLAMA_BASE_URL')
+    or 'http://localhost:11434'
+)
+LOCAL_LLM_MODEL = os.getenv('LOCAL_LLM_MODEL', 'qwen2.5:0.5b')
+LOCAL_LLM_FALLBACK_MODEL = os.getenv('LOCAL_LLM_FALLBACK_MODEL', '')
 LOCAL_LLM_TIMEOUT_SECONDS = int(os.getenv('LOCAL_LLM_TIMEOUT_SECONDS', '60'))
 LOCAL_LLM_TEMPERATURE = float(os.getenv('LOCAL_LLM_TEMPERATURE', '0.2'))
 LOCAL_LLM_MAX_CONTEXT_DOCS = int(os.getenv('LOCAL_LLM_MAX_CONTEXT_DOCS', '8'))
+LOCAL_LLM_API_KEY = os.getenv('LOCAL_LLM_API_KEY') or os.getenv('SERVICE_API_KEY', '')
+LOCAL_LLM_AUTH_HEADER = os.getenv('LOCAL_LLM_AUTH_HEADER', 'Authorization')
+LOCAL_LLM_USE_BEARER = os.getenv('LOCAL_LLM_USE_BEARER', 'True').lower() == 'true'
+LOCAL_LLM_RETRY_ATTEMPTS = int(os.getenv('LOCAL_LLM_RETRY_ATTEMPTS', '2'))
+LOCAL_LLM_RETRY_BACKOFF_SECONDS = float(os.getenv('LOCAL_LLM_RETRY_BACKOFF_SECONDS', '1.0'))
+LOCAL_LLM_CIRCUIT_FAILURE_THRESHOLD = int(os.getenv('LOCAL_LLM_CIRCUIT_FAILURE_THRESHOLD', '3'))
+LOCAL_LLM_CIRCUIT_OPEN_SECONDS = int(os.getenv('LOCAL_LLM_CIRCUIT_OPEN_SECONDS', '30'))
